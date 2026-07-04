@@ -128,7 +128,3 @@ export const VENUE_HEAT = [
   { name: "สนามวอลเลย์บอล", pct: 42, sessions: 48 },
   { name: "สนามกีฬากลาง", pct: 36, sessions: 38 },
 ];
-export const ORG_EVENTS = [
-  { id: "oe1", title: "KU Badminton Open 2568", date: "19 ก.ค. 68", participants: 64, checkins: 41, status: "กำลังจะมาถึง" },
-  { id: "oe2", title: "ชมรมแบดมินตัน Mini Tournament", date: "10 มิ.ย. 68", participants: 32, checkins: 30, status: "จบแล้ว" },
-];

@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { ChevronRight, Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router";
 import { useLang, T } from "../lang";
 import { PageHd } from "../components/shared";
+import { useAuth } from "../auth/AuthContext";
 
 export function SettingsPage({ onBack }: { onBack: () => void }) {
   const lang = useLang(); const t = T[lang];
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => { await logout(); navigate("/auth", { replace: true }); };
   const [notifMatch, setNotifMatch] = useState(true);
   const [notifSession, setNotifSession] = useState(true);
   const [notifEvent, setNotifEvent] = useState(false);
@@ -65,7 +70,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             </button>
           </div>
           <div className="bg-white rounded-2xl border border-border overflow-hidden">
-            <button className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-red-50 text-red-600 transition-colors">
+            <button onClick={handleLogout} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-red-50 text-red-600 transition-colors">
               <p className="text-sm font-semibold">{t.logout}</p>
             </button>
           </div>

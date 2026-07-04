@@ -2,9 +2,12 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { useLang, T } from "../lang";
+import { useAuth, ApiError } from "../auth/AuthContext";
+import { ThaiDateField } from "../components/shared";
 
 export function AuthPage({ onDone }: { onDone: () => void }) {
   const lang = useLang(); const t = T[lang];
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPw, setShowPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
@@ -16,11 +19,25 @@ export function AuthPage({ onDone }: { onDone: () => void }) {
   const [nick, setNick] = useState("");
   const [dob, setDob] = useState("");
   const [err, setErr] = useState("");
-  const submit = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const submit = async () => {
     if (!email.endsWith("@ku.th")) { setErr(t.err_email); return; }
-    if (pw.length < 6) { setErr(t.err_pw_short); return; }
+    if (pw.length < 8) { setErr(t.err_pw_short); return; }
     if (mode === "register" && pw !== confirmPw) { setErr(t.err_pw_match); return; }
-    setErr(""); onDone();
+    if (mode === "register" && (!firstName.trim() || !lastName.trim())) { setErr(t.err_email); return; }
+    setErr(""); setSubmitting(true);
+    try {
+      if (mode === "login") {
+        await login(email, pw);
+      } else {
+        await register({ email, password: pw, firstName: firstName.trim(), lastName: lastName.trim(), nickname: nick.trim() || undefined });
+      }
+      onDone();
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setSubmitting(false);
+    }
   };
   const inp = "w-full bg-gray-50 border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400";
   return (
@@ -56,8 +73,8 @@ export function AuthPage({ onDone }: { onDone: () => void }) {
                 <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={t.ph_lastname} className={inp} />
               </div>
               <div className="flex gap-2">
-                <input value={nick} onChange={e => setNick(e.target.value)} placeholder={t.ph_nickname} className={inp} />
-                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className={inp} title={t.ph_dob} />
+                <input value={nick} onChange={e => setNick(e.target.value)} placeholder={t.ph_nickname} className={`${inp} flex-1`} />
+                <div className="flex-1"><ThaiDateField value={dob} onChange={setDob} mode="past" yearsAhead={80} /></div>
               </div>
             </>}
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t.ph_email} className={inp} />
@@ -73,8 +90,8 @@ export function AuthPage({ onDone }: { onDone: () => void }) {
             )}
           </div>
           {err && <p className="text-red-500 text-xs mt-2 flex items-center gap-1.5"><AlertTriangle size={13} />{err}</p>}
-          <button onClick={submit} className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-colors active:scale-[0.98] shadow-sm">
-            {mode === "login" ? t.login : t.register}
+          <button onClick={submit} disabled={submitting} className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-colors active:scale-[0.98] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+            {submitting ? "กำลังดำเนินการ..." : mode === "login" ? t.login : t.register}
           </button>
           <p className="text-center text-[11px] text-muted-foreground mt-4 leading-relaxed">{t.ku_only}</p>
         </motion.div>
